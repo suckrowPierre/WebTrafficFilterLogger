@@ -7,7 +7,7 @@ from threading import Timer
 
 logfolder = 'logs'
 hosts = ['chat.openai.com', 'huggingface.co']
-write_interval = 10  # Interval to write to CSV in seconds
+write_interval = 30  # Interval to write to CSV in seconds
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 
@@ -27,20 +27,22 @@ def create_filter(hosts):
     return filter_str
 
 def packet_callback(packet):
-    packets.append(packet)
+    packets.append((time.strftime("%Y-%m-%d %H:%M:%S"),packet.summary()))
     logging.info(packet.summary())
 
 def write_to_csv():
     global packets
     if packets:
-        # Updated timestamp format for filename
-        timestamp = time.strftime("%Y-%m-%d-%H-%M-%S")
+        timestamp, unused_summary = packets[0]
+        timestamp = timestamp.replace(" ", "-")
+        timestamp = timestamp.replace(":", "-")
         filename = f"{logfolder}/log_{timestamp}.csv"
         with open(filename, 'w', newline='') as csvfile:
             csvwriter = csv.writer(csvfile)
             csvwriter.writerow(['Date and Time', 'Packet Summary'])
             for packet in packets:
-                csvwriter.writerow([time.strftime("%Y-%m-%d %H:%M:%S"), packet.summary()])
+                date, summary = packet
+                csvwriter.writerow([date, summary])
         packets = []
     Timer(write_interval, write_to_csv).start()
 
