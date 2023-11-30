@@ -27,22 +27,24 @@ def create_filter(hosts):
     return filter_str
 
 def packet_callback(packet):
-    packets.append((time.strftime("%Y-%m-%d %H:%M:%S"),packet.summary()))
+    # Check if the packet has IP layer
+    if packet.haslayer('IP'):
+        src_ip = packet['IP'].src
+        dst_ip = packet['IP'].dst
+        packets.append((time.strftime("%Y-%m-%d %H:%M:%S"), src_ip, dst_ip))
     logging.info(packet.summary())
 
 def write_to_csv():
     global packets
     if packets:
-        timestamp, unused_summary = packets[0]
-        timestamp = timestamp.replace(" ", "-")
-        timestamp = timestamp.replace(":", "-")
+        timestamp = packets[0][0].replace(" ", "-").replace(":", "-")
         filename = f"{logfolder}/log_{timestamp}.csv"
         with open(filename, 'w', newline='') as csvfile:
             csvwriter = csv.writer(csvfile)
-            csvwriter.writerow(['Date and Time', 'Packet Summary'])
+            csvwriter.writerow(['Date and Time', 'Source IP', 'Destination IP'])
             for packet in packets:
-                date, summary = packet
-                csvwriter.writerow([date, summary])
+                date, src_ip, dst_ip = packet
+                csvwriter.writerow([date, src_ip, dst_ip])
         packets = []
     Timer(write_interval, write_to_csv).start()
 
