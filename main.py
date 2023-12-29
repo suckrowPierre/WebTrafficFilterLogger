@@ -14,7 +14,6 @@ logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 if not os.path.exists(logfolder):
     os.makedirs(logfolder)
 
-# Store the packets in a list
 packets = []
 
 def create_filter(hosts):
@@ -27,7 +26,6 @@ def create_filter(hosts):
     return filter_str
 
 def packet_callback(packet):
-    # Check if the packet has IP layer
     if packet.haslayer('IP'):
         src_ip = packet['IP'].src
         dst_ip = packet['IP'].dst
@@ -48,8 +46,7 @@ def write_to_csv():
         packets = []
     Timer(write_interval, write_to_csv).start()
 
-# Start the timer for writing to CSV
+
 Timer(write_interval, write_to_csv).start()
 
-# Start sniffing
 sniff(filter=create_filter(hosts), prn=packet_callback, store=0, iface='en0')
